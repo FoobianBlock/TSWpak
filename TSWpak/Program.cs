@@ -209,22 +209,21 @@ namespace TSWpak
             {
                 ProcessStartInfo processStartInfo = new ProcessStartInfo();
                 processStartInfo.RedirectStandardOutput = true;
+                processStartInfo.RedirectStandardError = true;
                 processStartInfo.UseShellExecute = false;
                 process.StartInfo = processStartInfo;
 
                 process.StartInfo.FileName = unrealPakPath;
                 process.StartInfo.Arguments = unrealPakArguments;
+
+                process.OutputDataReceived += (sender, outArgs) => { PrintUnrealPakOutput(outArgs.Data); };
+                process.ErrorDataReceived += (sender, outArgs) => { PrintUnrealPakOutput(outArgs.Data); };
+
                 process.Start();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
 
-                /*if(process.StandardOutput.ReadToEnd().Contains("Error: "))
-                {
-                    ConsoleColor userForeground = Console.ForegroundColor;
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(process.StandardOutput.ReadToEnd());
-                    Console.ForegroundColor = userForeground;
-                }*/
-
-                Console.WriteLine(process.StandardOutput.ReadToEnd());
+                // Console.WriteLine(process.StandardOutput.ReadToEnd());
                 process.WaitForExit();
             }
 
@@ -239,6 +238,25 @@ namespace TSWpak
             if (StartedFromGui)
                 Exit(0);
             #endregion
+        }
+
+        private static void PrintUnrealPakOutput(string unrealPakOutput)
+        {
+            if(unrealPakOutput != null) // If the garbage collector does garbage itself this should be a inappropriate fail-safe, asnyc stuff sucks and I'm too lazy to do it right
+            {
+                if (unrealPakOutput.Contains("Error: "))
+                    WriteColoredLine(unrealPakOutput, ConsoleColor.Red);
+                else if (unrealPakOutput.Contains("LogDerivedDataCache: Display: "))
+                    WriteColoredLine(unrealPakOutput, ConsoleColor.DarkGray);
+                else if (unrealPakOutput.Contains("LogPakFile: Display: Creating pak "))
+                    WriteColoredLine(unrealPakOutput, ConsoleColor.Green);
+                else if (unrealPakOutput.Contains("LogPakFile: Display: Added "))
+                    WriteColoredLine(unrealPakOutput, ConsoleColor.Green);
+                else if (unrealPakOutput.Contains("LogPakFile: Display: Using command line for crypto configuration"))
+                    WriteColoredLine(unrealPakOutput, ConsoleColor.DarkGray);
+                else
+                    Console.WriteLine(unrealPakOutput);
+            }
         }
 
         static void WriteColoredLine(string text, ConsoleColor color)
