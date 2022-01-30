@@ -184,14 +184,14 @@ namespace TSWpak
                 pakName = "TSWpak-output.pak";
             }
             
-            if (!pakName.Contains(@":\")) // Check if filepath has the part after the drive letter ":\" in it, if so assume it#s a full file path
+            if (!pakName.Contains(@":\")) // Check if filepath has the part after the drive letter ":\" in it, if so assume it's a full file path
             {
                 if (pakName.Contains("\""))
                 {
                     pakName.Replace("\"", ""); // Remove quatation marks around the file path as they will be added again a few lines down
                 }
 
-                string pakFilePath = "\"" + Directory.GetCurrentDirectory() + @"\" + pakName + "\"";
+                string pakFilePath = Directory.GetCurrentDirectory() + @"\" + pakName;
                 WriteColoredLine("No full/invalid pak file path (" + pakName + ") specified! Output location: " + pakFilePath, ConsoleColor.DarkGray);
                 pakName = pakFilePath;
             }
@@ -201,7 +201,8 @@ namespace TSWpak
             string responseFilePath = Path.GetTempPath() + "TSWpak_responseFile.txt";
             File.WriteAllText(responseFilePath, responseFileContent);
 
-            string unrealPakArguments = pakName + " -create=" + responseFilePath + " -compress";
+            string unrealPakArguments = "\"" + pakName + "\" -create=" + responseFilePath + " -compress";
+            Console.WriteLine(unrealPakArguments);
 
             Console.Write("\nUnrealPak.exe output:\n");
 
@@ -227,7 +228,7 @@ namespace TSWpak
                 process.WaitForExit();
             }
 
-            // UnrealPak path is knwon working by now, it can be saved
+            // UnrealPak path is known working by now, it can be saved
             if (unrealPakPath.Contains("\""))
                 unrealPakPath.Replace("\"", "");
             UpdateAppSetting("UnrealPakPath", unrealPakPath);
@@ -269,7 +270,16 @@ namespace TSWpak
 
         static void TestDir(string path)
         {
-            DirectoryInfo dir = new DirectoryInfo(path); // TODO: Filter input. This is a base System.IO method and it can cause BSODs with the wrong inputs lol
+            foreach(char inv in Path.GetInvalidPathChars())
+            {
+                if (path.Contains(inv))
+                {
+                    WriteColoredLine(path + " contains a invalid character \"" + inv + "\"!", ConsoleColor.Red);
+                    Exit(3);
+                }
+            }
+
+            DirectoryInfo dir = new DirectoryInfo(path);
             if (!dir.Exists)
             {
                 WriteColoredLine(path + " not found!", ConsoleColor.Red);
