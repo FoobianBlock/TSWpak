@@ -1,6 +1,6 @@
 # TSWpak
 
-C# console application to ease the packing process of mods for Dovetail Games' Train Sim World® 2 post Rush Hour update
+C# console application to ease the packing process of mods for Dovetail Games' Train Sim World® on Unreal Engine 4.26 (TSW 3 + TSW 2 post Rush Hour update)
 
 ## Requirements
 
